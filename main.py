@@ -32,7 +32,7 @@ def main():
 
     cfg = PRESETS[args.preset]
     game = Game(cfg["rows"], cfg["cols"], cfg["num_mines"], seed=args.seed)
-    renderer = Renderer(game)
+    renderer = Renderer(game, preset=args.preset)
     renderer.run()
 
 

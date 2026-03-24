@@ -10,6 +10,7 @@ PRESETS = {
 }
 
 DEFAULT_PRESET = "beginner"
+PRESET_ORDER = ["beginner", "intermediate", "expert"]
 
 # Pygame renderer settings
 CELL_SIZE = 40          # pixels per cell
@@ -21,6 +22,7 @@ COLOUR_HIDDEN   = (189, 189, 189)
 COLOUR_REVEALED = (220, 220, 220)
 COLOUR_MINE     = (200,  50,  50)
 COLOUR_FLAG     = (230, 120,  30)
+COLOUR_WRONG_FLAG = (200,  50,  50)
 COLOUR_GRID     = (150, 150, 150)
 COLOUR_HEADER   = (100, 100, 100)
 COLOUR_TEXT     = (255, 255, 255)

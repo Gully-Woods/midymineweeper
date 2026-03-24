@@ -13,8 +13,9 @@ Cell view states stored in self.view (numpy int array):
 
 import numpy as np
 
-HIDDEN  = -1
-FLAGGED =  9
+HIDDEN       = -1
+FLAGGED      =  9
+MINE_EXPOSED = 10
 
 
 class Board:
@@ -111,12 +112,18 @@ class Board:
             self.view[row, col] = HIDDEN
 
     def reveal_all_mines(self):
-        """Expose all mines — called on game over for display."""
+        """Expose unflagged mines on game over. Leaves player flags untouched."""
         if self._mines is not None:
             for r in range(self.rows):
                 for c in range(self.cols):
-                    if self._mines[r, c]:
-                        self.view[r, c] = FLAGGED  # reuse flag slot to mark mines
+                    if self._mines[r, c] and self.view[r, c] != FLAGGED:
+                        self.view[r, c] = MINE_EXPOSED
+
+    def is_mine(self, row: int, col: int) -> bool:
+        """Return True if (row, col) is a mine. Only valid after mines are placed."""
+        if self._mines is None:
+            return False
+        return bool(self._mines[row, col])
 
     # ------------------------------------------------------------------
     # Queries
