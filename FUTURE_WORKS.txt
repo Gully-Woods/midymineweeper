@@ -1,0 +1,98 @@
+================================================================================
+FUTURE WORKS
+================================================================================
+
+--------------------------------------------------------------------------------
+REWARD SHAPING FOR DEEP Q-LEARNING
+--------------------------------------------------------------------------------
+
+Current reward structure (baseline):
+  +N    newly revealed safe cells (flood-fill count)
+  -10   mine hit
+  +50   win
+   0    wasted move (click on already-revealed cell)
+
+Proposed reward components to test:
+
+  1. FLAT SAFE CELL REWARD
+     Replace flood-fill +N with flat +1 per revealed cell.
+     Rationale: flood-fill creates noisy gradient (one lucky click = +20).
+     Flat +1 makes the learning signal cleaner.
+
+  2. END-GAME FLAG REWARDS
+     +R_flag per correctly placed flag at episode end
+     -R_flag per incorrectly placed flag (flagging a safe cell) at episode end
+     Note: keep R_flag < cost_of_guessing to avoid degenerate all-flag policy.
+     Suggested start: +3 correct, -3 wrong.
+
+  3. MINE PUNISHMENT VARIANTS
+     a) Fixed:      -10 always (current)
+     b) Info-scaled: -10 * (1 + adjacent_revealed / 8)  -- punish more when
+                     agent had information and still clicked a mine
+     c) Progressive: -10 * (step / max_steps)  -- harsher late in game
+
+  4. TIME-DEPENDENT VARIANTS (test separately)
+     a) Efficiency bonus:  win_reward = 50 * (1 - steps / max_steps)
+                           rewards faster wins
+     b) Survival bonus:    +0.1 per step survived
+                           encourages conservative play over early risk
+
+Suggested starting config before tuning magnitudes:
+  +1 per revealed safe cell (flat)
+  -10 mine (fixed)
+  +50 win
+  +3 correct flag / -3 wrong flag (end of game)
+  time variant: test survival and efficiency separately
+
+--------------------------------------------------------------------------------
+TESTING STRATEGY
+--------------------------------------------------------------------------------
+
+  Ablation study — enable components one at a time:
+    Run A: mine penalty only (baseline)
+    Run B: + flat safe cell reward
+    Run C: + end-game flag rewards
+    Run D: + time bonus (efficiency)
+    Run E: + time bonus (survival)
+    Run F: all combined
+
+  Reward magnitude sweep (hold shape fixed, vary scale):
+    mine penalty:    {-5, -10, -20}
+    flag reward:     {+1, +5, +10}
+    per-step reward: {0, +0.05, +0.1}
+    Run each for 50k episodes, compare final win rate + learning speed.
+
+  Log each reward component separately per episode (not just total reward)
+  to see which signals the agent is actually responding to.
+
+--------------------------------------------------------------------------------
+METRICS FOR MEASURING EFFECTIVENESS
+--------------------------------------------------------------------------------
+
+  Win rate                         primary success metric
+  Episodes to reach 10% win rate   learning speed
+  Flag precision                   correct flags / total flags placed
+  Flag recall                      correct flags / total mines
+  Avg cells revealed before death  board coverage quality
+  Death rate on first N moves      is it still guessing blindly early?
+  % episodes with >= 1 flag placed is flagging behaviour being learned?
+  Policy entropy over time         exploration vs exploitation balance
+  Rolling win rate curve           stability and convergence
+
+  Flag precision/recall is the key signal for flag reward shaping:
+    Precision up, recall low  -> agent only flags when certain (conservative)
+    Recall up, precision low  -> agent over-flagging
+
+--------------------------------------------------------------------------------
+NOTEBOOK PLAN (when ready to implement)
+--------------------------------------------------------------------------------
+
+  Create notebooks/q_learning_rewards.ipynb similar to random_agent.ipynb.
+  Parameterise the reward config as a dataclass or dict so different
+  variants can be swapped in without touching env code.
+  Run ablation and magnitude sweep cells.
+  Plot learning curves, flag precision/recall, and per-component reward logs.
+  Compare all variants against the random agent baseline from
+  notebooks/random_agent.ipynb.
+
+================================================================================
