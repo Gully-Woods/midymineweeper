@@ -20,7 +20,7 @@ import torch.nn as nn
 import torch.optim as optim
 from collections import deque
 
-from ..model.dqn_model import DQNModel
+from ..model.dqn_model import DQNModel, CNNDQNModel
 
 
 class ReplayBuffer:
@@ -50,6 +50,7 @@ class DQNAgent:
         batch_size:    int   = 64,
         buffer_size:   int   = 10_000,
         target_update: int   = 100,   # steps between target network sync
+        model_cls             = None,  # DQNModel or CNNDQNModel (default: CNNDQNModel)
     ):
         self.action_size   = action_size
         self.gamma         = gamma
@@ -62,8 +63,10 @@ class DQNAgent:
 
         self.buffer = ReplayBuffer(buffer_size)
 
-        self.policy_net = DQNModel(state_size, action_size)
-        self.target_net = DQNModel(state_size, action_size)
+        if model_cls is None:
+            model_cls = CNNDQNModel
+        self.policy_net = model_cls(state_size, action_size)
+        self.target_net = model_cls(state_size, action_size)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
         self.optimiser = optim.Adam(self.policy_net.parameters(), lr=lr)
