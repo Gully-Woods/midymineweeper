@@ -105,6 +105,9 @@ class DQNAgent:
         loss = self.loss_fn(q_vals, targets)
         self.optimiser.zero_grad()
         loss.backward()
+        grad_norm = torch.nn.utils.clip_grad_norm_(
+            self.policy_net.parameters(), max_norm=float("inf")
+        ).item()
         self.optimiser.step()
 
         self.steps += 1
@@ -112,7 +115,7 @@ class DQNAgent:
             self.target_net.load_state_dict(self.policy_net.state_dict())
 
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
-        return loss.item()
+        return loss.item(), grad_norm
 
 
 def train(agent: DQNAgent, env, episodes: int = 100_000, log_every: int = 1000):
